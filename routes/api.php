@@ -8,6 +8,4 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::get('/api/v1/movies', [MovieController::class, 'index']);
-
-Route::post('/api/v1/movies', [MovieController::class, 'store']);
+Route::apiResource('/v1/movies', MovieController::class)->middleware('auth:sanctum');

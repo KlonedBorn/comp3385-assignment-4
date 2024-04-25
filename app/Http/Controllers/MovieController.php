@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use App\Models\Movie;
 
 class MovieController extends Controller
 {
@@ -15,29 +17,27 @@ class MovieController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $movie_request): JsonResponse
     {
-        phpinfo(INFO_VARIABLES);
+        $movie_request->validated(
+            [
+                'title' => 'required',
+                'description' => 'required',
+                'poster' => 'required|image|max:12288'
+            ]
+        );
 
-        $validatedData = $request->validate([
-            'title' => 'required|max:255',
-            'description' => 'required|max:255',
-            'poster' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-        ]);
+        $poster = $movie_request->file('poster')->storeAs(
+            'images',
+            $movie_request->file('poster')->getClientOriginalName(),
+            'public'
+        );
 
-        $posterName = time() . '.' . $request->poster->extension();
-
-        $request->poster->move(public_path('posters'), $posterName);
-
-        $movie = \App\Models\Movie::create([
-            'title' => $validatedData['title'],
-            'description' => $validatedData['description'],
-            'poster' => $posterName,
-        ]);
+        $movie = Movie::create($movie_request->only('title', 'description') + ['poster' => $poster]);
 
         return response()->json([
             'message' => 'Movie created successfully',
-            'movies' => $movie,
+            'movie' => $movie
         ]);
     }
 }
